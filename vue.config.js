@@ -6,12 +6,12 @@ function resolve(dir) {
   return path.join(__dirname, dir)
 }
 
-const name = defaultSettings.title // 网址标题
-const port = 8013 // 端口配置
+const name = defaultSettings.title // URL title
+const port = 8013 // Port configuration
 
 // All configuration item explanations can be find in https://cli.vuejs.org/config/
 module.exports = {
-  // hash 模式下可使用
+  // hash Available in mode
   // publicPath: process.env.NODE_ENV === 'development' ? '/' : './',
   publicPath: '/',
   outputDir: 'dist',

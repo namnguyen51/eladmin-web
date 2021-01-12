@@ -30,7 +30,7 @@
           <div v-if="crud.props.searchToggle">
             <!-- 搜索 -->
             <el-input
-              v-model="query.blurry"
+              v-model="query.fuzzy"
               clearable
               size="small"
               placeholder="输入名称或者邮箱搜索"

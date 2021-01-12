@@ -3,37 +3,37 @@ import { parseTime, downloadFile } from '@/utils/index'
 import Vue from 'vue'
 
 /**
- * CRUD配置
+ * CRUD configuration
  * @author moxun
  * @param {*} options <br>
  * @return crud instance.
  * @example
- * 要使用多crud时，请在关联crud的组件处使用crud-tag进行标记，如：<jobForm :job-status="dict.job_status" crud-tag="job" />
+ * To use multiple crud, please use crud-tag to mark the components associated with the crud, such as: <jobForm :job-status="dict.job_status" crud-tag="job" />
  */
 function CRUD(options) {
   const defaultOptions = {
     tag: 'default',
-    // id字段名
+    // id field name
     idField: 'id',
-    // 标题
+    // title
     title: '',
-    // 请求数据的url
+    // Request data url
     url: '',
-    // 表格数据
+    // Table data
     data: [],
-    // 选择项
+    // options
     selections: [],
-    // 待查询的对象
+    // Object to be queried
     query: {},
-    // 查询数据的参数
+    // Query data parameters
     params: {},
-    // Form 表单
+    // Form
     form: {},
-    // 重置表单
+    // Reset form
     defaultForm: () => {},
-    // 排序规则，默认 id 降序， 支持多字段排序 ['id,desc', 'createTime,asc']
+    // Sorting rules, the default id descending order, support multi-field sorting ['id,desc','createTime,asc']
     sort: ['id,desc'],
-    // 等待时间
+    // waiting time
     time: 50,
     // CRUD Method
     crudMethod: {
@@ -42,7 +42,7 @@ function CRUD(options) {
       edit: (form) => {},
       get: (id) => {}
     },
-    // 主页操作栏显示哪些按钮
+    // Which buttons are displayed on the homepage action bar
     optShow: {
       add: true,
       edit: true,
@@ -50,22 +50,22 @@ function CRUD(options) {
       download: true,
       reset: true
     },
-    // 自定义一些扩展属性
+    // Customize some extended attributes
     props: {},
-    // 在主页准备
+    // Prepare on the homepage
     queryOnPresenterCreated: true,
-    // 调试开关
+    // Debug switch
     debug: false
   }
   options = mergeOptions(defaultOptions, options)
   const data = {
     ...options,
-    // 记录数据状态
+    // Record data status
     dataStatus: {},
     status: {
       add: CRUD.STATUS.NORMAL,
       edit: CRUD.STATUS.NORMAL,
-      // 添加或编辑状态
+      // Add or edit status
       get cu() {
         if (this.add === CRUD.STATUS.NORMAL && this.edit === CRUD.STATUS.NORMAL) {
           return CRUD.STATUS.NORMAL
@@ -76,35 +76,35 @@ function CRUD(options) {
         }
         throw new Error('wrong crud\'s cu status')
       },
-      // 标题
+      // title
       get title() {
-        return this.add > CRUD.STATUS.NORMAL ? `新增${crud.title}` : this.edit > CRUD.STATUS.NORMAL ? `编辑${crud.title}` : crud.title
+        return this.add > CRUD.STATUS.NORMAL ? `Add${crud.title}` : this.edit > CRUD.STATUS.NORMAL ? `Edit${crud.title}` : crud.title
       }
     },
     msg: {
-      submit: '提交成功',
-      add: '新增成功',
-      edit: '编辑成功',
-      del: '删除成功'
+      submit: 'Submitted successfully',
+      add: 'Added successfully',
+      edit: 'Edited successfully',
+      del: 'Deleted successfully'
     },
     page: {
-      // 页码
+      // page number
       page: 0,
-      // 每页数据条数
+      // Number of data per page
       size: 10,
-      // 总数据条数
+      // Total number of data
       total: 0
     },
-    // 整体loading
+    // Overall loading
     loading: false,
-    // 导出的 Loading
+    // Exported Loading
     downloadLoading: false,
-    // 删除的 Loading
+    // Deleted Loading
     delAllLoading: false
   }
   const methods = {
     /**
-     * 通用的提示
+     * General tips
      */
     submitSuccessNotify() {
       crud.notify(crud.msg.submit, CRUD.NOTIFICATION_TYPE.SUCCESS)
@@ -130,17 +130,17 @@ function CRUD(options) {
       }
       return new Promise((resolve, reject) => {
         crud.loading = true
-        // 请求数据
+        // Request data
         initData(crud.url, crud.getQueryParams()).then(data => {
           const table = crud.getTable()
-          if (table && table.lazy) { // 懒加载子节点数据，清掉已加载的数据
+          if (table && table.lazy) { // Lazy load child node data, clear the loaded data
             table.store.states.treeData = {}
             table.store.states.lazyTreeNodeMap = {}
           }
           crud.page.total = data.totalElements
           crud.data = data.content
           crud.resetDataStatus()
-          // time 毫秒后显示表格
+          // show table after time milliseconds
           setTimeout(() => {
             crud.loading = false
             callVmHook(crud, CRUD.HOOK.afterRefresh)
@@ -153,7 +153,7 @@ function CRUD(options) {
       })
     },
     /**
-     * 启动添加
+     * Start adding
      */
     toAdd() {
       crud.resetForm()
@@ -165,8 +165,8 @@ function CRUD(options) {
       callVmHook(crud, CRUD.HOOK.afterToCU, crud.form)
     },
     /**
-     * 启动编辑
-     * @param {*} data 数据项
+     * Start editing
+     * @param {*} data data item
      */
     toEdit(data) {
       crud.resetForm(JSON.parse(JSON.stringify(data)))
@@ -179,15 +179,15 @@ function CRUD(options) {
       callVmHook(crud, CRUD.HOOK.afterToCU, crud.form)
     },
     /**
-     * 启动删除
-     * @param {*} data 数据项
+     * Start delete
+     * @param {*} data data item
      */
     toDelete(data) {
       crud.getDataStatus(crud.getDataId(data)).delete = CRUD.STATUS.PREPARED
     },
     /**
-     * 取消删除
-     * @param {*} data 数据项
+     * Undelete
+     * @param {*} data data item
      */
     cancelDelete(data) {
       if (!callVmHook(crud, CRUD.HOOK.beforeDeleteCancel, data)) {
@@ -197,7 +197,7 @@ function CRUD(options) {
       callVmHook(crud, CRUD.HOOK.afterDeleteCancel, data)
     },
     /**
-     * 取消新增/编辑
+     * Cancel add/edit
      */
     cancelCU() {
       const addStatus = crud.status.add
@@ -222,13 +222,13 @@ function CRUD(options) {
       if (editStatus === CRUD.STATUS.PREPARED) {
         callVmHook(crud, CRUD.HOOK.afterEditCancel, crud.form)
       }
-      // 清除表单验证
+      // Clear form validation
       if (crud.findVM('form').$refs['form']) {
         crud.findVM('form').$refs['form'].clearValidate()
       }
     },
     /**
-     * 提交新增/编辑
+     * Submit new/edit
      */
     submitCU() {
       if (!callVmHook(crud, CRUD.HOOK.beforeValidateCU)) {
@@ -249,7 +249,7 @@ function CRUD(options) {
       })
     },
     /**
-     * 执行添加
+     * Perform add
      */
     doAdd() {
       if (!callVmHook(crud, CRUD.HOOK.beforeSubmit)) {
@@ -268,7 +268,7 @@ function CRUD(options) {
       })
     },
     /**
-     * 执行编辑
+     * Executive edit
      */
     doEdit() {
       if (!callVmHook(crud, CRUD.HOOK.beforeSubmit)) {
@@ -288,8 +288,8 @@ function CRUD(options) {
       })
     },
     /**
-     * 执行删除
-     * @param {*} data 数据项
+     * Execute delete
+     * @param {*} data data item
      */
     doDelete(data) {
       let delAll = false
@@ -325,7 +325,7 @@ function CRUD(options) {
       })
     },
     /**
-     * 通用导出
+     * Universal export
      */
     doExport() {
       crud.downloadLoading = true
@@ -337,10 +337,10 @@ function CRUD(options) {
       })
     },
     /**
-     * 获取查询参数
+     * Get query parameters
      */
     getQueryParams: function() {
-      // 清除参数无值的情况
+      // Clear the case where the parameter has no value
       Object.keys(crud.query).length !== 0 && Object.keys(crud.query).forEach(item => {
         if (crud.query[item] === null || crud.query[item] === '') crud.query[item] = undefined
       })
@@ -355,30 +355,30 @@ function CRUD(options) {
         ...crud.params
       }
     },
-    // 当前页改变
+    // Current page change
     pageChangeHandler(e) {
       crud.page.page = e
       crud.refresh()
     },
-    // 每页条数改变
+    // Change the number of items per page
     sizeChangeHandler(e) {
       crud.page.size = e
       crud.page.page = 1
       crud.refresh()
     },
-    // 预防删除第二页最后一条数据时，或者多选删除第二页的数据时，页码错误导致请求无数据
+    // Prevents when deleting the last data of the second page, or multiple selections to delete the data of the second page, the page number error leads to no data
     dleChangePage(size) {
       if (crud.data.length === size && crud.page.page !== 1) {
         crud.page.page -= 1
       }
     },
-    // 选择改变
+    // Choice change
     selectionChangeHandler(val) {
       crud.selections = val
     },
     /**
-     * 重置查询参数
-     * @param {Boolean} toQuery 重置后进行查询操作
+     * Reset query parameters
+     * @param {Boolean} toQuery perform query operation after reset
      */
     resetQuery(toQuery = true) {
       const defaultQuery = JSON.parse(JSON.stringify(crud.defaultQuery))
@@ -386,15 +386,15 @@ function CRUD(options) {
       Object.keys(query).forEach(key => {
         query[key] = defaultQuery[key]
       })
-      // 重置参数
+      // Reset parameters
       this.params = {}
       if (toQuery) {
         crud.toQuery()
       }
     },
     /**
-     * 重置表单
-     * @param {Array} data 数据
+     * Reset form
+     * @param {Array} data
      */
     resetForm(data) {
       const form = data || (typeof crud.defaultForm === 'object' ? JSON.parse(JSON.stringify(crud.defaultForm)) : crud.defaultForm.apply(crud.findVM('form')))
@@ -406,13 +406,13 @@ function CRUD(options) {
           Vue.set(crudFrom, key, form[key])
         }
       }
-      // add by ghl 2020-10-04  页面重复添加信息时，下拉框的校验会存在，需要找工取消
+      // When repeatedly adding information to the page, the check of the drop-down box will exist, and you need to find a job to cancel
       if (crud.findVM('form').$refs['form']) {
         crud.findVM('form').$refs['form'].clearValidate()
       }
     },
     /**
-     * 重置数据状态
+     * Reset data status
      */
     resetDataStatus() {
       const dataStatus = {}
@@ -431,18 +431,18 @@ function CRUD(options) {
       crud.dataStatus = dataStatus
     },
     /**
-     * 获取数据状态
-     * @param {Number | String} id 数据项id
+     * Get data status
+     * @param {Number | String} id data item id
      */
     getDataStatus(id) {
       return crud.dataStatus[id]
     },
     /**
-     * 用于树形表格多选, 选中所有
+     * Used for multiple selection in tree form, select all
      * @param selection
      */
     selectAllChange(selection) {
-      // 如果选中的数目与请求到的数目相同就选中子节点，否则就清空选中
+      // If the selected number is the same as the requested number, select the child node, otherwise clear the selection
       if (selection && selection.length === crud.data.length) {
         selection.forEach(val => {
           crud.selectChange(selection, val)
@@ -452,12 +452,12 @@ function CRUD(options) {
       }
     },
     /**
-     * 用于树形表格多选，单选的封装
+     * Used for multi-selection and single-selection packaging of tree form
      * @param selection
      * @param row
      */
     selectChange(selection, row) {
-      // 如果selection中存在row代表是选中，否则是取消选中
+      // If there is row in the selection, it means it is selected, otherwise it is unselected
       if (selection.find(val => { return crud.getDataId(val) === crud.getDataId(row) })) {
         if (row.children) {
           row.children.forEach(val => {
@@ -473,7 +473,7 @@ function CRUD(options) {
       }
     },
     /**
-     * 切换选中状态
+     * Toggle selected state
      * @param selection
      * @param data
      */
@@ -531,20 +531,20 @@ function CRUD(options) {
     }
   }
   const crud = Object.assign({}, data)
-  // 可观测化
+  // Observability
   Vue.observable(crud)
-  // 附加方法
+  // Additional method
   Object.assign(crud, methods)
-  // 记录初始默认的查询参数，后续重置查询时使用
+  // Record the initial default query parameters and use them when resetting the query later
   Object.assign(crud, {
     defaultQuery: JSON.parse(JSON.stringify(data.query)),
-    // 预留4位存储：组件 主页、头部、分页、表单，调试查看也方便找
+    // Reserve 4 bits of storage: component homepage, header, paging, form, debugging and viewing is also easy to find
     vms: Array(4),
     /**
-     * 注册组件实例
-     * @param {String} type 类型
-     * @param {*} vm 组件实例
-     * @param {Number} index 该参数内部使用
+     * Registered component instance
+     * @param {String} type
+     * @param {*} vm component instance
+     * @param {Number} index This parameter is used internally
      */
     registerVM(type, vm, index = -1) {
       const vmObj = {
@@ -555,7 +555,7 @@ function CRUD(options) {
         this.vms.push(vmObj)
         return
       }
-      if (index < 4) { // 内置预留vm数
+      if (index < 4) { // Built-in reserved VM number
         this.vms[index] = vmObj
         return
       }
@@ -563,8 +563,8 @@ function CRUD(options) {
       this.vms.splice(index, 1, vmObj)
     },
     /**
-     * 取消注册组件实例
-     * @param {*} vm 组件实例
+     * Unregister component instance
+     * @param {*} vm component instance
      */
     unregisterVM(type, vm) {
       for (let i = this.vms.length - 1; i >= 0; i--) {
@@ -582,7 +582,7 @@ function CRUD(options) {
       }
     }
   })
-  // 冻结处理，需要扩展数据的话，使用crud.updateProp(name, value)，以crud.props.name形式访问，这个是响应式的，可以做数据绑定
+  // For freezing processing, if you need to expand the data, use crud.updateProp(name, value) to access in the form of crud.props.name. This is responsive and you can do data binding
   Object.freeze(crud)
   return crud
 }
@@ -598,7 +598,7 @@ function callVmHook(crud, hook) {
   for (let i = 2; i < arguments.length; ++i) {
     nargs.push(arguments[i])
   }
-  // 有些组件扮演了多个角色，调用钩子时，需要去重
+  // Some components play multiple roles and need to be de-duplicated when calling hooks
   const vmSet = new Set()
   crud.vms.forEach(vm => vm && vmSet.add(vm.vm))
   vmSet.forEach(vm => {
@@ -625,7 +625,7 @@ function mergeOptions(src, opts) {
 }
 
 /**
- * 查找crud
+ * Find crud
  * @param {*} vm
  * @param {string} tag
  */
@@ -642,7 +642,7 @@ function lookupCrud(vm, tag) {
 }
 
 /**
- * crud主页
+ * crud homepage
  */
 function presenter(crud) {
   if (crud) {
@@ -650,7 +650,7 @@ function presenter(crud) {
   }
   return {
     data() {
-      // 在data中返回crud，是为了将crud与当前实例关联，组件观测crud相关属性变化
+      // Returning crud in data is to associate crud with the current instance, and the component observes changes in crud related attributes
       return {
         crud: this.crud
       }
@@ -695,7 +695,7 @@ function presenter(crud) {
 }
 
 /**
- * 头部
+ * head
  */
 function header() {
   return {
@@ -716,7 +716,7 @@ function header() {
 }
 
 /**
- * 分页
+ * Pagination
  */
 function pagination() {
   return {
@@ -737,7 +737,7 @@ function pagination() {
 }
 
 /**
- * 表单
+ * Form
  */
 function form(defaultForm) {
   return {
@@ -786,55 +786,55 @@ function crud(options = {}) {
 }
 
 /**
- * CRUD钩子
+ * CRUD hook
  */
 CRUD.HOOK = {
-  /** 刷新 - 之前 */
+  /** Refresh-before */
   beforeRefresh: 'beforeCrudRefresh',
-  /** 刷新 - 之后 */
+  /** Refresh-after */
   afterRefresh: 'afterCrudRefresh',
-  /** 删除 - 之前 */
+  /** Delete-before */
   beforeDelete: 'beforeCrudDelete',
-  /** 删除 - 之后 */
+  /** Delete-after */
   afterDelete: 'afterCrudDelete',
-  /** 删除取消 - 之前 */
+  /** Delete cancel-before */
   beforeDeleteCancel: 'beforeCrudDeleteCancel',
-  /** 删除取消 - 之后 */
+  /** Delete cancel-after */
   afterDeleteCancel: 'afterCrudDeleteCancel',
-  /** 新建 - 之前 */
+  /** New-before */
   beforeToAdd: 'beforeCrudToAdd',
-  /** 新建 - 之后 */
+  /** New-after */
   afterToAdd: 'afterCrudToAdd',
-  /** 编辑 - 之前 */
+  /** Edit-before */
   beforeToEdit: 'beforeCrudToEdit',
-  /** 编辑 - 之后 */
+  /** Edit-after */
   afterToEdit: 'afterCrudToEdit',
-  /** 开始 "新建/编辑" - 之前 */
+  /** Start "New/Edit"-before */
   beforeToCU: 'beforeCrudToCU',
-  /** 开始 "新建/编辑" - 之后 */
+  /** Start "New/Edit"-after */
   afterToCU: 'afterCrudToCU',
-  /** "新建/编辑" 验证 - 之前 */
+  /** "New/Edit" Verification-Before */
   beforeValidateCU: 'beforeCrudValidateCU',
-  /** "新建/编辑" 验证 - 之后 */
+  /** "New/Edit" Verification-After */
   afterValidateCU: 'afterCrudValidateCU',
-  /** 添加取消 - 之前 */
+  /** Add cancel-before */
   beforeAddCancel: 'beforeCrudAddCancel',
-  /** 添加取消 - 之后 */
+  /** Add cancel-after */
   afterAddCancel: 'afterCrudAddCancel',
-  /** 编辑取消 - 之前 */
+  /** Edit canceled-before */
   beforeEditCancel: 'beforeCrudEditCancel',
-  /** 编辑取消 - 之后 */
+  /** Edit canceled-after */
   afterEditCancel: 'afterCrudEditCancel',
-  /** 提交 - 之前 */
+  /** Submit-before */
   beforeSubmit: 'beforeCrudSubmitCU',
-  /** 提交 - 之后 */
+  /** Submit-after */
   afterSubmit: 'afterCrudSubmitCU',
   afterAddError: 'afterCrudAddError',
   afterEditError: 'afterCrudEditError'
 }
 
 /**
- * CRUD状态
+ * CRUD status
  */
 CRUD.STATUS = {
   NORMAL: 0,
@@ -843,7 +843,7 @@ CRUD.STATUS = {
 }
 
 /**
- * CRUD通知类型
+ * CRUD notification types
  */
 CRUD.NOTIFICATION_TYPE = {
   SUCCESS: 'success',

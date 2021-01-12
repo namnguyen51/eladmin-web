@@ -7,7 +7,7 @@
 <script>
 import CodeMirror from 'codemirror'
 import 'codemirror/lib/codemirror.css'
-// 替换主题这里需修改名称
+// Replace the theme here needs to modify the name
 import 'codemirror/theme/idea.css'
 import 'codemirror/mode/yaml/yaml'
 export default {
@@ -45,7 +45,7 @@ export default {
       lineWrapping: true,
       tabSize: 2,
       cursorHeight: 0.9,
-      // 替换主题这里需修改名称
+      // Replace the theme here needs to modify the name
       theme: 'idea'
     })
     this.editor.setSize('auto', this.height)
